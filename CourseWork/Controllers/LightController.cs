@@ -9,14 +9,19 @@ namespace CourseWork.Controllers
 {
     internal class LightController : Controller
     {
-        DataSensorsStruct[] data;
-        public LightController(DataSensorsStruct[] data)
+        List<DataSensors> data;
+        public event Action<string>? Message;
+        public LightController(List<DataSensors> data, List<UserSettings> user_settings)
         {
             this.data = data;
         }
         public override void CheckParam()
         {
-            Console.WriteLine("Check Light");
+            SendMessage("Check Light");
+        }
+        public void SendMessage(string mes)
+        {
+            Message?.Invoke(mes);
         }
     }
 }

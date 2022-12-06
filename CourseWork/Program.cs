@@ -9,44 +9,32 @@ namespace CourseWork
     public delegate void Message(string message);
     class Program
     {
-
         public static void Main()
         {
-            //массив текущих значений датчиков
-            DataSensorsStruct[] data_sensor_now = new DataSensorsStruct[12];
-
-            for (int i = 0; i < data_sensor_now.Length; i++)
-            {
-                data_sensor_now[i] = new DataSensorsStruct();
-            }
-
-            //массив настроек для каждой комнаты
-            UserSettings[] user_settings = new UserSettings[12];
-
             string user_settings_file = "user_settings.json";
 
-            try
+            List<Room> rooms = new List<Room>();
+            rooms.Add(new Room("Bedroom"));
+            rooms.Add(new Room("LivingRoom"));
+            rooms.Add(new Room("Wardrobe"));
+
+            List<DataSensors> data_sensor_now = new List<DataSensors>(rooms.Count);
+            for (int i = 0; i < data_sensor_now.Capacity; i++)
             {
-                using (FileStream fs = new FileStream(user_settings_file, FileMode.Open))
-                {
-                    //при десериализации обьекты массива инициализируются
-                    user_settings = JsonSerializer.Deserialize<UserSettings[]>(fs);
-                }
-                Console.WriteLine("Old settings loaded");
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
-                Console.WriteLine("Maybe it is first start");
-                Console.WriteLine("Default settings used");
-                //инициализациия массива настроек
-                for (int i = 0; i < user_settings.Length; i++)
-                {
-                    user_settings[i] = new UserSettings();
-                }
+                data_sensor_now.Add(new DataSensors());
             }
 
-            Console.WriteLine("If you want to change the basic settings, please enter 1");
+            SaveSettingToJson<UserSettings> save_settings = new SaveSettingToJson<UserSettings>();
+            save_settings.Message += ConsoleMessageToUser;
+
+            List<UserSettings> user_settings = new List<UserSettings>(rooms.Count);
+            if(save_settings.GetFromFile(user_settings_file) is List<UserSettings> user_set)
+            {
+                user_settings = user_set;
+            }
+
+            //конструкция под рефакторинг
+            ConsoleMessageToUser("If you want to change the basic settings, please enter 1");
             int choice;
             while (true) 
             { 
@@ -57,56 +45,44 @@ namespace CourseWork
                 }
                 catch
                 {
-                    Console.WriteLine("Incorrect input");
+                    ConsoleMessageToUser("Incorrect input");
                 }
             }
-            if(choice == 1)
+
+            if (choice == 1)
             {
-                ChangeSettings settings = new ChangeSettings(user_settings);
+                ChangeSettings set = new ChangeSettings(user_settings);
                 //изменение некоторых базовых настроек
-                settings.SetTemperature(Rooms.BoilerRoom, 20);
-                settings.SetHumidMax(Rooms.Bathroom, 50);
-                settings.SetSecurityOn(Rooms.Attic, 1);
-
-                //сохранение настроек в файл
-                try
-                {
-                    using (FileStream fs = new FileStream(user_settings_file, FileMode.OpenOrCreate))
-                    {
-                        JsonSerializer.Serialize(fs, user_settings);
-                    }
-                    Console.WriteLine("Settings saved to file");
-                }
-                catch(Exception e)
-                {
-                    Console.WriteLine(e.Message);
-                }
-
+                set.SetTemperature(0, 20);
+                set.SetTemperature(1, 25);
+                set.SetHumidMax(1, 50);
+                set.SetSecurityOn(2, 1);
+                save_settings.SaveToFile(user_settings, user_settings_file);
             }
-            else Console.WriteLine("Basic settings used");
+            else 
+            {
+                ChangeSettings set = new ChangeSettings(user_settings);
+                ConsoleMessageToUser("Basic settings used");
+            }
+            //
 
-            
-            GasController gas_Controller = new GasController(data_sensor_now, user_settings);
-            HumidControler humid_Controler = new HumidControler(data_sensor_now, user_settings);
-            TemperatureControler temperature_Controler = new TemperatureControler(data_sensor_now, user_settings);
-            SecurityController security_Controller = new SecurityController(data_sensor_now, user_settings);
+            GasController gas_controller = new GasController(data_sensor_now, user_settings);
+            HumidControler humid_controler = new HumidControler(data_sensor_now, user_settings);
+            TemperatureControler temperature_controler = new TemperatureControler(data_sensor_now, user_settings);
+            SecurityController security_controller = new SecurityController(data_sensor_now, user_settings);
             
             //переодическая проверка параметров
             TimerCallback tm = new TimerCallback(ParamHandler);
-            Timer timer = new Timer(tm,null,1000,4000);
+            Timer timer = new Timer(tm,null,4000,5000);
 
-
-            //подписка через делегат
-            gas_Controller.RegisterMessage(MessageToUser);
-            //подписка с помощью события
-            security_Controller.Message += MessageToUser;
-
-
-
-
-
+            //подписка на сообщения
+            security_controller.Message += ConsoleMessageToUser;
+            humid_controler.Message+= ConsoleMessageToUser;
+            gas_controller.Message += ConsoleMessageToUser;
+            temperature_controler.Message += ConsoleMessageToUser;
+            
             //обработчик сообщений классов
-            void MessageToUser(string message)
+            void ConsoleMessageToUser(string message)
             {
                 Console.WriteLine(message);
             }
@@ -114,10 +90,10 @@ namespace CourseWork
             //проверка датчиков
             void ParamHandler(object obj)
             {
-                gas_Controller.CheckParam();
-                temperature_Controler.CheckParam();
-                humid_Controler.CheckParam();
-                security_Controller.CheckParam();
+                gas_controller.CheckParam();
+                temperature_controler.CheckParam();
+                humid_controler.CheckParam();
+                security_controller.CheckParam();
             }
             Console.ReadLine();
         }

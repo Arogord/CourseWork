@@ -10,23 +10,24 @@ namespace CourseWork.Controllers
 {
     internal class HumidControler : Controller, IHumid,IVentilation
     {
-        DataSensorsStruct[] data;
-        UserSettings[] settings;
-        public HumidControler(DataSensorsStruct[] data, UserSettings[] settings)
+        List<DataSensors> data;
+        List<UserSettings> user_settings;
+        public event Action<string>? Message;
+        public HumidControler(List<DataSensors> data, List<UserSettings> user_settings)
         {
             this.data = data;
-            this.settings = settings;
+            this.user_settings = user_settings;
         }
         public override void CheckParam()
         {
-            Console.WriteLine("Check Humid");
-            for (int i = 0; i < data.Length; i++)
+            SendMessage("Check Humid");
+            for (int i = 0; i < data.Capacity; i++)
             {
-                if (data[i].Humid < settings[i].HumidMin)
+                if (data[i].Humid < user_settings[i].HumidMin)
                 {
                     SetHumidTime(i,10);
                 }
-                if (data[i].Humid > settings[i].HumidMax)
+                if (data[i].Humid > user_settings[i].HumidMax)
                 {
                     SetAngleValve(80);
                     SetMotorSpeed(100);
@@ -36,17 +37,21 @@ namespace CourseWork.Controllers
         }
         public void SetAngleValve(int angleValve)
         {
-            Console.WriteLine($"Angle Valve is {angleValve}");
+            SendMessage($"Angle Valve is {angleValve}");
         }
 
         public void SetHumidTime(int room, int Time)
         {
-            Console.WriteLine($"Switching on humidity for {Time} minutes in {(Rooms)room}");
+            SendMessage($"Switching on humidity for {Time} minutes in {room} room");
         }
 
         public void SetMotorSpeed(int MotorSpeed)
         {
-            Console.WriteLine($"Motor Speed is {MotorSpeed}%");
+            SendMessage($"Motor Speed is {MotorSpeed}%");
+        }
+        public void SendMessage(string message)
+        {
+            Message?.Invoke(message);
         }
     }
 }

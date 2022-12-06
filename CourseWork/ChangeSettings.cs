@@ -10,50 +10,58 @@ namespace CourseWork
 {
     public class ChangeSettings : IChangeSettings
     {
-        UserSettings[] user_settings;
-        public ChangeSettings(UserSettings[] user_settings)
+        List<UserSettings> user_settings;
+        public ChangeSettings(List<UserSettings> settings)
         {
-            this.user_settings = user_settings;
+            if (settings.Count == 0) 
+            { 
+                for (int i = 0; i < settings.Capacity; i++)
+                {
+                    settings.Add(new UserSettings());
+                }
+            }
+            this.user_settings = settings;
+        }
+        
+        public void SetCO2Level1(int rooms, int co2level1)
+        {
+            user_settings[rooms].CO2Level1 = co2level1;
         }
 
-        public void SetCO2Level1(Rooms rooms, int co2level1)
+        public void SetCO2Level2(int rooms, int co2level2)
         {
-            user_settings[(int)rooms].CO2Level1 = co2level1;
+            user_settings[rooms].CO2Level2 = co2level2;
         }
 
-        public void SetCO2Level2(Rooms rooms, int co2level2)
+        public void SetGasLvel1(int rooms, int gasLevel1)
         {
-            user_settings[(int)rooms].CO2Level2 = co2level2;
+            user_settings[rooms].GasLvel1 = gasLevel1;
         }
 
-        public void SetGasLvel1(Rooms rooms, int gasLevel1)
+        public void SetGasLvel2(int rooms, int gasLevel2)
         {
-            user_settings[(int)rooms].GasLvel1 = gasLevel1;
+            user_settings[rooms].GasLvel2 = gasLevel2;
         }
 
-        public void SetGasLvel2(Rooms rooms, int gasLevel2)
+        public void SetHumidMax(int rooms, byte humidity)
         {
-            user_settings[(int)rooms].GasLvel2 = gasLevel2;
+            user_settings[rooms].HumidMax = humidity;
         }
 
-        public void SetHumidMax(Rooms rooms, byte humidity)
+        public void SetHumidMin(int rooms, byte humidity)
         {
-            user_settings[(int)rooms].HumidMax = humidity;
+            user_settings[rooms].HumidMin = humidity;
         }
 
-        public void SetHumidMin(Rooms rooms, byte humidity)
+        public void SetSecurityOn(int rooms, byte securityOn)
         {
-            user_settings[(int)rooms].HumidMin = humidity;
+            user_settings[rooms].SecurityOn = securityOn;
         }
 
-        public void SetSecurityOn(Rooms rooms, byte securityOn)
+        public void SetTemperature(int rooms, int temperature)
         {
-            user_settings[(int)rooms].SecurityOn = securityOn;
+            user_settings[rooms].Temperature = temperature;
         }
 
-        public void SetTemperature(Rooms rooms, int temperature)
-        {
-            user_settings[(int)rooms].Temperature = temperature;
-        }
     }
 }

@@ -11,21 +11,21 @@ namespace CourseWork.Controllers
     internal class SecurityController : Controller, IMessageToUser
     {
         public event Action<string>? Message;
-        DataSensorsStruct[] data;
-        UserSettings[] settings;
-        public SecurityController(DataSensorsStruct[] data, UserSettings[] settings)
+        List<DataSensors> data;
+        List<UserSettings> settings;
+        public SecurityController(List<DataSensors> data, List<UserSettings> settings)
         {
             this.data = data;
             this.settings = settings;
         }
         public override void CheckParam()
         {
-            Console.WriteLine("Check Security");
-            for(int i = 0; i < data.Length; i++)
+            SendMessage("Check Security");
+            for(int i = 0; i < data.Capacity; i++)
             {
                 if (data[i].Motion == 1 && settings[i].SecurityOn ==1)
                 {
-                    SendMessage($"Detected motion in {(Rooms)i}");
+                    SendMessage($"Detected motion in {i} room");
                 }
             }
         }

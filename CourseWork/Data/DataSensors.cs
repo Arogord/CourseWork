@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CourseWork.Data
 {
-    public struct DataSensorsStruct
+    public class DataSensors
     {
         public int Temperature;
         public int Pressure;

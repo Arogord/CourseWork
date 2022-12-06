@@ -10,10 +10,10 @@ namespace CourseWork.Controllers
 {
     public class GasController : Controller, IMessageToUser, IVentilation
     {
-        DataSensorsStruct[] data;
-        UserSettings[] user_settings;
-        Message? message;
-        public GasController(DataSensorsStruct[] data, UserSettings[] user_settings)
+        List<DataSensors> data;
+        List<UserSettings> user_settings;
+        public event Action<string>? Message;
+        public GasController(List<DataSensors> data, List<UserSettings> user_settings)
         {
             this.data = data;
             this.user_settings = user_settings;
@@ -21,51 +21,47 @@ namespace CourseWork.Controllers
 
         public override void CheckParam()
         {
-            Console.WriteLine("Check Gas");
-            for(int i = 0; i < data.Length; i++)
+            SendMessage("Check Gas");
+            for(int i = 0; i < data.Capacity; i++)
             {
                 if (data[i].CO2 > user_settings[i].CO2Level1)
                 {
-                    SendMessage($"CO2 levels are more then normal in {(Rooms)i}");
+                    SendMessage($"CO2 levels are more then normal in {i} room");
                     SetMotorSpeed(100);
                 }
                 if (data[i].Gas > user_settings[i].GasLvel1)
                 {
-                    SendMessage($"Gas levels are more then normal in {(Rooms)i}");
+                    SendMessage($"Gas levels are more then normal in {i} room");
                     SetMotorSpeed(100);
                 }
 
                 if (data[i].CO2> user_settings[i].CO2Level2)
                 {
-                    SendMessage($"CO2 levels are critical in {(Rooms)i}");
+                    SendMessage($"CO2 levels are critical in {i} room");
                     SetAngleValve(0);
                 }
                 if (data[i].Gas > user_settings[i].GasLvel2)
                 {
-                    SendMessage($"Gas levels are critical in {(Rooms)i}");
+                    SendMessage($"Gas levels are critical in {i} room");
                     SetAngleValve(0);
                 }
                 
             }
         }
-        public void RegisterMessage(Message del)
-        {
-            message = del;
-        }
-
+       
         public void SendMessage(string mes)
         {
-            message?.Invoke(mes);
+            Message?.Invoke(mes);
         }
 
         public void SetAngleValve(int angleValve)
         {
-            Console.WriteLine($"Angle Valve is {angleValve}");
+            SendMessage($"Angle Valve is {angleValve}");
         }
 
         public void SetMotorSpeed(int MotorSpeed)
         {
-            Console.WriteLine($"Motor Speed is {MotorSpeed}%");
+            SendMessage($"Motor Speed is {MotorSpeed}%");
         }
     }
 }
