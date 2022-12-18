@@ -11,23 +11,23 @@ namespace CourseWork.Controllers
     internal class HumidControler : Controller, IHumid,IVentilation
     {
         List<DataSensors> data;
-        List<UserSettings> user_settings;
+        List<Room> rooms;
         public event Action<string>? Message;
-        public HumidControler(List<DataSensors> data, List<UserSettings> user_settings)
+        public HumidControler(List<DataSensors> data, List<Room> rooms)
         {
             this.data = data;
-            this.user_settings = user_settings;
+            this.rooms = rooms;
         }
         public override void CheckParam()
         {
             SendMessage("Check Humid");
             for (int i = 0; i < data.Capacity; i++)
             {
-                if (data[i].Humid < user_settings[i].HumidMin)
+                if (data[i].Humid < rooms[i].HumidMin)
                 {
                     SetHumidTime(i,10);
                 }
-                if (data[i].Humid > user_settings[i].HumidMax)
+                if (data[i].Humid > rooms[i].HumidMax)
                 {
                     SetAngleValve(80);
                     SetMotorSpeed(100);
@@ -42,7 +42,7 @@ namespace CourseWork.Controllers
 
         public void SetHumidTime(int room, int Time)
         {
-            SendMessage($"Switching on humidity for {Time} minutes in {room} room");
+            SendMessage($"Switching on humidity for {Time} minutes in {rooms[room].Name}");
         }
 
         public void SetMotorSpeed(int MotorSpeed)

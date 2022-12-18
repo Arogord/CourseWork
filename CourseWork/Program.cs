@@ -1,8 +1,6 @@
-﻿using CourseWork.Controllers;
+﻿using CourseWork.ContactWithUser;
+using CourseWork.Controllers;
 using CourseWork.Data;
-using CourseWork.Interfaces;
-using System.Security.Cryptography;
-using System.Text.Json;
 
 namespace CourseWork
 {
@@ -11,135 +9,109 @@ namespace CourseWork
     {
         public static void Main()
         {
-            string user_settings_file = "user_settings.json";
-
             List<Room> rooms = new List<Room>();
-            rooms.Add(new Room("Bedroom"));
-            rooms.Add(new Room("LivingRoom"));
-            rooms.Add(new Room("Wardrobe"));
-
-            List<DataSensors> data_sensor_now = new List<DataSensors>(rooms.Count);
-            for (int i = 0; i < data_sensor_now.Capacity; i++)
+            //обобщенный класс для сохранения листа обьектов
+            SaveSettingToJson<Room> SaveSettings = new SaveSettingToJson<Room>();
+            //класс для общения с пользователем через консоль
+            ConsoleInformationWithUser UserContact = new ConsoleInformationWithUser();
+            //класс для изменения настроек
+            ChangeSettings settings = new ChangeSettings(UserContact);
+            SaveSettings.Message += UserContact.MessageToUser;
+            //Попытка десериализовать старые настройки
+            if (SaveSettings.GetFromFile(Properties.Resources.FileName) is List<Room> rooms_from_file)
             {
-                data_sensor_now.Add(new DataSensors());
+                rooms = rooms_from_file;
             }
+            CreateRooms creator = new CreateRooms(UserContact, rooms);
 
-            SaveSettingToJson<UserSettings> save_settings = new SaveSettingToJson<UserSettings>();
-            save_settings.Message += ConsoleMessageToUser;
-
-            List<UserSettings> user_settings = new List<UserSettings>(rooms.Count);
-            if(save_settings.GetFromFile(user_settings_file) is List<UserSettings> user_set)
+            CreateNewRoom();
+            if (rooms.Count == 0) 
             {
-                user_settings = user_set;
+                UserContact.MessageToUser("Тo rooms, program ended");
+                goto END; 
             }
-
-            //конструкция под рефакторинг
-            ConsoleMessageToUser("If you want to change the basic settings, please enter 1");
-            int choice;
-            while (true) 
-            { 
-                try
-                {
-                    choice = Convert.ToInt32(Console.ReadLine());
-                    break;
-                }
-                catch
-                {
-                    ConsoleMessageToUser("Incorrect input");
-                }
-            }
-
-            if (choice == 1)
+            ChangeSettings();
+            List<DataSensors> DataSensorNow = new List<DataSensors>(rooms.Count);
+            //когда будут реальные классы с входными данными, инициализируем обьекты в них
+            for (int i = 0; i < DataSensorNow.Capacity; i++)
             {
-                ChangeSettings set = new ChangeSettings(user_settings);
-                //изменение некоторых базовых настроек
-                set.SetTemperature(0, 20);
-                set.SetTemperature(1, 25);
-                set.SetHumidMax(1, 50);
-                set.SetSecurityOn(2, 1);
-                save_settings.SaveToFile(user_settings, user_settings_file);
+                DataSensorNow.Add(new DataSensors());
+                DataSensorNow[i].Name = rooms[i].Name;
             }
-            else 
-            {
-                ChangeSettings set = new ChangeSettings(user_settings);
-                ConsoleMessageToUser("Basic settings used");
-            }
-            //
 
-            GasController gas_controller = new GasController(data_sensor_now, user_settings);
-            HumidControler humid_controler = new HumidControler(data_sensor_now, user_settings);
-            TemperatureControler temperature_controler = new TemperatureControler(data_sensor_now, user_settings);
-            SecurityController security_controller = new SecurityController(data_sensor_now, user_settings);
-            
+            GasController gasController = new GasController(DataSensorNow, rooms);
+            HumidControler humidController = new HumidControler(DataSensorNow, rooms);
+            TemperatureControler temperatureControler = new TemperatureControler(DataSensorNow, rooms);
+            SecurityController securityController = new SecurityController(DataSensorNow, rooms);
             //переодическая проверка параметров
             TimerCallback tm = new TimerCallback(ParamHandler);
             Timer timer = new Timer(tm,null,4000,5000);
-
             //подписка на сообщения
-            security_controller.Message += ConsoleMessageToUser;
-            humid_controler.Message+= ConsoleMessageToUser;
-            gas_controller.Message += ConsoleMessageToUser;
-            temperature_controler.Message += ConsoleMessageToUser;
-            
-            //обработчик сообщений классов
-            void ConsoleMessageToUser(string message)
-            {
-                Console.WriteLine(message);
-            }
-            
-            //проверка датчиков
+            securityController.Message += UserContact.MessageToUser;
+            humidController.Message+= UserContact.MessageToUser;
+            gasController.Message += UserContact.MessageToUser;
+            temperatureControler.Message += UserContact.MessageToUser;
+
+            END:
+            Console.ReadLine();
             void ParamHandler(object obj)
             {
-                gas_controller.CheckParam();
-                temperature_controler.CheckParam();
-                humid_controler.CheckParam();
-                security_controller.CheckParam();
+                gasController.CheckParam();
+                humidController.CheckParam();
+                temperatureControler.CheckParam();
+                securityController.CheckParam();
             }
-            Console.ReadLine();
+            
+            void CreateNewRoom()
+            {
+                try
+                {
+                    while (true)
+                    {
+                        UserContact.MessageToUser("You want to create a new room y/n?");
+                        string? choice = UserContact.InfoFomUser();
+                        if (choice != null && choice.Equals("y", StringComparison.OrdinalIgnoreCase))
+                        {
+                            creator.AddRoom();
+                            SaveSettings.SaveToFile(rooms, Properties.Resources.FileName);
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    UserContact.MessageToUser(ex.Message);
+                }
+            }
+
+            void ChangeSettings()
+            {
+                try
+                {
+                    UserContact.MessageToUser("Do you want to change the default settings y/n?");
+                    string? choice2 = UserContact.InfoFomUser();
+                    if (choice2 != null && choice2.Equals("y", StringComparison.OrdinalIgnoreCase))
+                    {
+                        foreach (Room room in rooms)
+                        {
+                            settings.RoomChangeSettings(room);
+                        }
+                        SaveSettings.SaveToFile(rooms, Properties.Resources.FileName);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    UserContact.MessageToUser(ex.Message);
+                }
+            }
+
         }
         
     }
 }
-
-
-    /*
-     * Контроллеры 
-     *            температуры 
-     *            влажности 
-     *            света
-     *            газов
-     *            охрана
-     *            
-     *            
-     * Структура с входящими данными (массив или хз), возможно несколько структур
-     *            температура
-     *            влажность
-     *            давление
-     *            освещенность
-     *            СО2
-     *            датчик газа
-     *            датчики движения
-     *            
-     * Структура или массив флагов для исполнительных устройств
-     * 
-     * Структура или массив с установленными параметрами.
-     * 
-     * 
-     * Пользовательский интерфейс для установки желаемых параметров
-     * 
-     * Система оповещения о неисправностях и выхода за пределы параметров
-     * 
-     * Сохранение пареметров в файл при изменении настроек.
-     * 
-     * Абстрактный класс контроллер с базовым функцианалом для всех контроллеров
-     * 
-     * Интерфейсы предоставляющие методы для взаимодействия с контроллерами
-     * 
-     * 
-     * В классе програм в бесконечном цикле, с определенной переодичностью, контроллеры считывают входящие данные со структуры, при необходимости включают/выключают исполнительные устройства.
-     * 
-     */
-
 
 //Требования
 //1.Создать консольное приложение с использованием основ ООП, логики алгоритмов, структур данных

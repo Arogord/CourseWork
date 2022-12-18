@@ -12,20 +12,20 @@ namespace CourseWork.Controllers
     {
         public event Action<string>? Message;
         List<DataSensors> data;
-        List<UserSettings> settings;
-        public SecurityController(List<DataSensors> data, List<UserSettings> settings)
+        List<Room> rooms;
+        public SecurityController(List<DataSensors> data, List<Room> rooms)
         {
             this.data = data;
-            this.settings = settings;
+            this.rooms = rooms;
         }
         public override void CheckParam()
         {
             SendMessage("Check Security");
             for(int i = 0; i < data.Capacity; i++)
             {
-                if (data[i].Motion == 1 && settings[i].SecurityOn ==1)
+                if (data[i].Motion == 1 && rooms[i].SecurityOn!=0)
                 {
-                    SendMessage($"Detected motion in {i} room");
+                    SendMessage($"Detected motion in {rooms[i].Name}");
                 }
             }
         }

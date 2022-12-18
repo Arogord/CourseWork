@@ -13,11 +13,11 @@ namespace CourseWork.Data
         
         public event Action<string>? Message;
         
-        public void SaveToFile(List<T> obj, string user_settings_file)
+        public void SaveToFile(List<T> obj, string userSettingsFile)
         {
             try
             {
-                using (FileStream fs = new FileStream(user_settings_file, FileMode.OpenOrCreate))
+                using (FileStream fs = new FileStream(userSettingsFile, FileMode.OpenOrCreate))
                 {
                     JsonSerializer.Serialize(fs, obj);
                 }
@@ -28,12 +28,12 @@ namespace CourseWork.Data
                 SendMessage(e.Message);
             }
         }
-        public List<T> GetFromFile(string user_settings_file)
+        public List<T> GetFromFile(string userSettingsFile)
         {
             List<T> room = null;
             try
             {
-                using (FileStream fs = new FileStream(user_settings_file, FileMode.Open))
+                using (FileStream fs = new FileStream(userSettingsFile, FileMode.Open))
                 {
                     room = JsonSerializer.Deserialize<List<T>>(fs);
                 }
@@ -42,7 +42,7 @@ namespace CourseWork.Data
             catch (Exception e)
             {
                 SendMessage(e.Message);
-                SendMessage("Maybe it is first start\nDefault settings used");
+                SendMessage("Maybe it is first start");
             }
             return room;
         }

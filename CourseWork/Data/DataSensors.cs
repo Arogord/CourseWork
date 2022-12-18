@@ -8,6 +8,7 @@ namespace CourseWork.Data
 {
     public class DataSensors
     {
+        public string? Name { get; set; }
         public int Temperature;
         public int Pressure;
         public int CO2;

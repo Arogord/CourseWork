@@ -11,12 +11,12 @@ namespace CourseWork.Controllers
     public class GasController : Controller, IMessageToUser, IVentilation
     {
         List<DataSensors> data;
-        List<UserSettings> user_settings;
+        List<Room> rooms;
         public event Action<string>? Message;
-        public GasController(List<DataSensors> data, List<UserSettings> user_settings)
+        public GasController(List<DataSensors> data, List<Room> rooms)
         {
             this.data = data;
-            this.user_settings = user_settings;
+            this.rooms = rooms;
         }
 
         public override void CheckParam()
@@ -24,25 +24,25 @@ namespace CourseWork.Controllers
             SendMessage("Check Gas");
             for(int i = 0; i < data.Capacity; i++)
             {
-                if (data[i].CO2 > user_settings[i].CO2Level1)
+                if (data[i].CO2 > rooms[i].CO2Level1)
                 {
-                    SendMessage($"CO2 levels are more then normal in {i} room");
+                    SendMessage($"CO2 levels are more then normal in {rooms[i].Name}");
                     SetMotorSpeed(100);
                 }
-                if (data[i].Gas > user_settings[i].GasLvel1)
+                if (data[i].Gas > rooms[i].GasLvel1)
                 {
-                    SendMessage($"Gas levels are more then normal in {i} room");
+                    SendMessage($"Gas levels are more then normal in {rooms[i].Name}");
                     SetMotorSpeed(100);
                 }
 
-                if (data[i].CO2> user_settings[i].CO2Level2)
+                if (data[i].CO2> rooms[i].CO2Level2)
                 {
-                    SendMessage($"CO2 levels are critical in {i} room");
+                    SendMessage($"CO2 levels are critical in {rooms[i].Name}");
                     SetAngleValve(0);
                 }
-                if (data[i].Gas > user_settings[i].GasLvel2)
+                if (data[i].Gas > rooms[i].GasLvel2)
                 {
-                    SendMessage($"Gas levels are critical in {i} room");
+                    SendMessage($"Gas levels are critical in {rooms[i].Name}");
                     SetAngleValve(0);
                 }
                 

@@ -10,10 +10,12 @@ namespace CourseWork.Controllers
     internal class LightController : Controller
     {
         List<DataSensors> data;
+        List<Room> rooms;
         public event Action<string>? Message;
-        public LightController(List<DataSensors> data, List<UserSettings> user_settings)
+        public LightController(List<DataSensors> data, List<Room> rooms)
         {
             this.data = data;
+            this.rooms = rooms;
         }
         public override void CheckParam()
         {

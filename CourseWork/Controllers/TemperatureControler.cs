@@ -11,12 +11,12 @@ namespace CourseWork.Controllers
     internal class TemperatureControler : Controller, IHeat, Icooling
     {
         List<DataSensors> data;
-        List<UserSettings> settings;
+        List<Room> rooms;
         public event Action<string>? Message;
-        public TemperatureControler(List<DataSensors> data, List<UserSettings> settings)
+        public TemperatureControler(List<DataSensors> data, List<Room> rooms)
         {
             this.data = data;
-            this.settings = settings;
+            this.rooms = rooms;
         }
 
         public override void CheckParam()
@@ -24,11 +24,11 @@ namespace CourseWork.Controllers
             SendMessage("Check Temperature");
             for(int i = 0; i < data.Capacity; i++)
             {
-                if (data[i].Temperature < settings[i].Temperature)
+                if (data[i].Temperature < rooms[i].Temperature)
                 {
                     Heating(i);
                 }
-                if (data[i].Temperature > (settings[i].Temperature + 4))
+                if (data[i].Temperature > (rooms[i].Temperature + 4))
                 {
                     Cooling();
                 }
@@ -42,7 +42,7 @@ namespace CourseWork.Controllers
 
         public void Heating(int i)
         {
-            SendMessage($"Heat is on in {i} room");
+            SendMessage($"Heat is on in {rooms[i].Name}");
         }
         public void SendMessage(string mes)
         {
